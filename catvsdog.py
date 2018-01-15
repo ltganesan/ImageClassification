@@ -1,17 +1,12 @@
-'''This script goes along the blog post
-"Building powerful image classification models using very little data"
-from blog.keras.io.
-It uses data that can be downloaded at:
-https://www.kaggle.com/c/dogs-vs-cats/data
-In our setup, we:
+'''In our setup, we:
 - created a data/ folder
 - created train/ and validation/ subfolders inside data/
 - created cats/ and dogs/ subfolders inside train/ and validation/
-- put the cat pictures index 0-999 in data/train/cats
-- put the cat pictures index 1000-1400 in data/validation/cats
-- put the dogs pictures index 12500-13499 in data/train/dogs
-- put the dog pictures index 13500-13900 in data/validation/dogs
-So that we have 1000 training examples for each class, and 400 validation examples for each class.
+- put the cat pictures index 1-1024 in data/train/cats
+- put the cat pictures index 1025-1440 in data/validation/cats
+- put the dogs pictures index 1-1024 in data/train/dogs
+- put the dog pictures index 1025-1440 in data/validation/dogs
+So that we have 1024 training examples for each class, and 416 validation examples for each class.
 In summary, this is our directory structure:
 ```
 data/
@@ -26,12 +21,12 @@ data/
             ...
     validation/
         dogs/
-            dog001.jpg
-            dog002.jpg
+            dog1025.jpg
+            dog1026.jpg
             ...
         cats/
-            cat001.jpg
-            cat002.jpg
+            cat1025.jpg
+            cat1026.jpg
             ...
 ```
 '''
@@ -44,7 +39,7 @@ from keras import applications
 # dimensions of our images.
 img_width, img_height = 150, 150
 
-top_model_weights_path = 'bottleneck_fc_model.h5'
+top_model_weights_path = 'top_model.h5'
 train_data_dir = 'data/train'
 validation_data_dir = 'data/validation'
 nb_train_samples = 2048
@@ -53,7 +48,7 @@ epochs = 50
 batch_size = 16
 
 
-def save_bottlebeck_features():
+def save_features():
 
     datagen = ImageDataGenerator(rescale=1. / 255)
 
@@ -66,9 +61,9 @@ def save_bottlebeck_features():
         batch_size=batch_size,
         class_mode=None,
         shuffle=False)
-    bottleneck_features_train = model.predict_generator(
+    features_train = model.predict_generator(
         generator, nb_train_samples // batch_size)
-    np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
+    np.save(open('features_train.npy', 'wb'), features_train)
 
     generator = datagen.flow_from_directory(
         validation_data_dir,
@@ -76,16 +71,16 @@ def save_bottlebeck_features():
         batch_size=batch_size,
         class_mode=None,
         shuffle=False)
-    bottleneck_features_validation = model.predict_generator(
+    features_validation = model.predict_generator(
         generator, nb_validation_samples // batch_size)
-    np.save(open('bottleneck_features_validation.npy', 'wb'), bottleneck_features_validation)
+    np.save(open('features_validation.npy', 'wb'), features_validation)
 
 
 def train_top_model():
-    train_data = np.load(open('bottleneck_features_train.npy', 'rb'))
+    train_data = np.load(open('features_train.npy', 'rb'))
     train_labels = np.array([0] * (nb_train_samples // 2) + [1] * (nb_train_samples // 2))
 
-    validation_data = np.load(open('bottleneck_features_validation.npy', 'rb'))
+    validation_data = np.load(open('features_validation.npy', 'rb'))
     validation_labels = np.array([0] * (nb_validation_samples // 2) + [1] * (nb_validation_samples // 2))
     model_top = Sequential()
     model_top.add(Flatten(input_shape=train_data.shape[1:]))
