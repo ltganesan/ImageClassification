@@ -98,5 +98,5 @@ def train_top_model():
     model_top.save_weights(top_model_weights_path)
     model_top.evaluate(validation_data, validation_labels)
 
-save_bottlebeck_features()
+save_features()
 train_top_model()
